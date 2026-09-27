@@ -1,0 +1,19 @@
+{
+  "name": "desafio-cartorio",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @cartorio/api & npm run dev --workspace @cartorio/web",
+    "build": "npm run build --workspace @cartorio/api && npm run build --workspace @cartorio/web",
+    "test": "npm run test --workspace @cartorio/api",
+    "lint": "npm run lint --workspace @cartorio/api && npm run lint --workspace @cartorio/web",
+    "db:migrate": "npm run db:migrate --workspace @cartorio/api",
+    "db:seed": "npm run db:seed --workspace @cartorio/api"
+  },
+  "engines": {
+    "node": ">=20.9"
+  }
+}
