@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PROTOCOLLED
+  UNDER_REVIEW
+  PENDING_REQUIREMENTS
+  COMPLETED
+  CANCELED
+}
+
+enum OrderPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model RequestType {
+  id        String         @id @default(uuid()) @db.Uuid
+  name      String         @unique @db.VarChar(100)
+  slug      String         @unique @db.VarChar(100)
+  createdAt DateTime       @default(now()) @map("created_at")
+  orders    ServiceOrder[]
+
+  @@map("request_types")
+}
+
+model ServiceOrder {
+  id            String            @id @default(uuid()) @db.Uuid
+  protocol      String            @unique @db.VarChar(11)
+  protocolYear  Int               @map("protocol_year")
+  sequence      Int
+  requestTypeId String            @map("request_type_id") @db.Uuid
+  requestType   RequestType       @relation(fields: [requestTypeId], references: [id], onDelete: Restrict)
+  applicant     String            @db.VarChar(150)
+  description   String            @db.Text
+  priority      OrderPriority     @default(NORMAL)
+  status        OrderStatus       @default(PROTOCOLLED)
+  histories     OrderTransition[]
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+  deletedAt     DateTime?         @map("deleted_at")
+
+  @@unique([protocolYear, sequence])
+  @@index([status])
+  @@index([requestTypeId])
+  @@index([createdAt])
+  @@map("service_orders")
+}
+
+model OrderTransition {
+  id         String       @id @default(uuid()) @db.Uuid
+  orderId    String       @map("order_id") @db.Uuid
+  order      ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus OrderStatus  @map("from_status")
+  toStatus   OrderStatus  @map("to_status")
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  @@index([orderId, createdAt])
+  @@map("order_transitions")
+}
+
+model ProtocolCounter {
+  year         Int      @id
+  lastSequence Int      @map("last_sequence")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("protocol_counters")
+}
+
