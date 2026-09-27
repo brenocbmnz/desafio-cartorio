@@ -18,8 +18,10 @@ describe('OrdersService integration', () => {
   });
 
   afterAll(async () => {
-    await prisma.serviceOrder.deleteMany({ where: { requestTypeId } });
-    await prisma.requestType.delete({ where: { id: requestTypeId } });
+    if (requestTypeId) {
+      await prisma.serviceOrder.deleteMany({ where: { requestTypeId } });
+      await prisma.requestType.delete({ where: { id: requestTypeId } });
+    }
     await prisma.$disconnect();
   });
 
@@ -36,7 +38,7 @@ describe('OrdersService integration', () => {
     );
 
     const sequences = created.map((order) => order.sequence).sort((a, b) => a - b);
-    expect(new Set(sequences)).toHaveSize(10);
+    expect(new Set(sequences).size).toBe(10);
     for (let index = 1; index < sequences.length; index += 1) {
       expect(sequences[index] - sequences[index - 1]).toBe(1);
     }

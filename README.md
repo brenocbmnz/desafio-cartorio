@@ -77,7 +77,7 @@ O comando `npm run dev` inicia frontend e backend. A variável `DATABASE_URL` de
 # Regras de domínio (não precisa de banco)
 npm test
 
-# Integração: requer DATABASE_URL e banco migrado
+# Integração: use um banco dedicado, já migrado
 npm run test:integration --workspace @cartorio/api
 
 # Tipos/lint e builds de produção
@@ -85,7 +85,7 @@ npm run lint
 npm run build
 ```
 
-Os testes unitários cobrem a matriz de transições, inclusive os estados terminais e o salto proibido de “Em exigência” para “Concluído”. O teste de integração cria dez pedidos em paralelo e comprova que os números recebidos são únicos e contíguos; também verifica a persistência atômica do histórico e a rejeição de uma transição inválida.
+Os testes unitários cobrem a matriz de transições, inclusive os estados terminais e o salto proibido de “Em exigência” para “Concluído”. O teste de integração cria dez pedidos em paralelo e comprova que os números recebidos são únicos e contíguos; também verifica a persistência atômica do histórico e a rejeição de uma transição inválida. Execute-o em um banco exclusivo de teste, nunca em uma base com dados relevantes.
 
 ## Regras de domínio
 
