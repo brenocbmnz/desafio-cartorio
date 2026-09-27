@@ -127,6 +127,7 @@ O `DELETE` é lógico e aceito somente enquanto o pedido está em `PROTOCOLLED`.
 
 | Método | Rota | Finalidade |
 | --- | --- | --- |
+| `GET` | `/api` | Saúde e descoberta da API |
 | `GET` | `/api/request-types` | Tipos pré-carregados |
 | `POST` | `/api/orders` | Criar e numerar um pedido |
 | `GET` | `/api/orders` | Listar, buscar e filtrar |
