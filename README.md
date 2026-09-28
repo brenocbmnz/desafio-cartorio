@@ -157,11 +157,10 @@ Parâmetros da listagem: `status`, `requestTypeId`, `search`, `page` e `pageSize
 
 ## O que eu faria com mais tempo
 
-1. Autenticação e autorização por papel, registrando o usuário responsável em cada movimentação.
+1. Autenticação e autorização por papel, registrando o usuário responsável em cada movimentação, incluindo um painel de administrador para realizar ações que não são possíveis por usuários comuns (como, por exemplo, passar o pedido de "Em Análise" para "Em Exigência").
 2. Testes end-to-end do navegador e testes de contrato da API no pipeline de CI.
 3. Edição no frontend (a API já suporta) com controle otimista de concorrência via versão do registro.
 4. Observabilidade com logs estruturados, métricas de tempo por etapa e rastreamento distribuído.
 5. Outbox transacional para notificações e integrações sem perder eventos.
-6. Kanban acessível por teclado e painel de indicadores; Redis só seria adotado após medir consultas reais.
 7. Endpoint opcional de classificação assistida por IA, com respostas estruturadas, limiar de confiança e confirmação humana.
 
