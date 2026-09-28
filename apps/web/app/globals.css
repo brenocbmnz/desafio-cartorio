@@ -259,7 +259,6 @@ label small { display: block; color: var(--muted); margin-top: 6px; font-size: 1
 /* Registration workflow */
 .registration-page { max-width: 1100px; }
 .registration-page > .back-link { margin-bottom: 22px; }
-.registration-heading-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; margin-bottom: 30px; }
 .registration-heading { margin: 0; }
 .registration-heading h1 { font-size: clamp(40px, 5vw, 58px); }
 .registration-progress { display: flex; flex: 0 0 auto; align-items: center; gap: 34px; margin: 0 0 5px; padding: 0; list-style: none; }
@@ -318,13 +317,7 @@ label small { display: block; color: var(--muted); margin-top: 6px; font-size: 1
 .registration-actions { margin: 0; padding: 22px 28px; border-top: 0; background: #fbfaf7; }
 .registration-actions .button-primary { gap: 12px; }
 
-.registration-guide { position: sticky; top: 98px; padding: 26px; border-radius: 12px; background: var(--green); color: white; box-shadow: 0 14px 32px rgba(23, 79, 60, 0.18); }
 .guide-symbol { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 50%; color: #dfbc79; font: 24px/1 Georgia, serif; }
-.registration-guide h2 { margin: 18px 0 8px; font: 500 23px/1.2 Georgia, serif; }
-.registration-guide > p:not(.eyebrow) { margin: 0; color: rgba(255, 255, 255, 0.72); font-size: 12px; line-height: 1.65; }
-.registration-guide ul { display: grid; gap: 12px; margin: 24px 0 0; padding: 20px 0 0; border-top: 1px solid rgba(255, 255, 255, 0.17); list-style: none; }
-.registration-guide li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; color: rgba(255, 255, 255, 0.84); font-size: 11px; }
-.registration-guide li span { color: #dfbc79; font-weight: 850; }
 
 .review-card { padding: 28px; }
 .review-card > .alert { margin: 0 0 22px; }
@@ -343,20 +336,9 @@ label small { display: block; color: var(--muted); margin-top: 6px; font-size: 1
 .review-confirmation strong { font-size: 13px; }
 .review-confirmation p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
 .review-card .registration-actions { margin: 26px -28px -28px; border-top: 1px solid #ecebe5; }
-.review-guide .eyebrow { color: #dfbc79; }
-.review-guide h2 { margin-top: 7px; }
-
-@media (max-width: 900px) {
-  .registration-heading-row { align-items: flex-start; flex-direction: column; gap: 20px; }
-  .registration-progress { margin: 0; }
-  .new-order-layout { grid-template-columns: 1fr; }
-  .registration-guide { position: static; }
-  .registration-guide ul { grid-template-columns: repeat(3, 1fr); }
-}
 
 @media (max-width: 620px) {
   .registration-page > .back-link { margin-bottom: 16px; }
-  .registration-heading-row { margin-bottom: 22px; }
   .registration-progress { width: 100%; gap: 25px; }
   .registration-progress li { flex: 1; }
   .registration-progress li:first-child::after { width: 12px; }
@@ -368,8 +350,6 @@ label small { display: block; color: var(--muted); margin-top: 6px; font-size: 1
   .priority-options { grid-template-columns: 1fr; }
   .registration-actions { align-items: stretch; flex-direction: column-reverse; padding: 18px 20px; }
   .registration-actions .button { width: 100%; }
-  .registration-guide { padding: 22px; }
-  .registration-guide ul { grid-template-columns: 1fr; }
   .review-card { padding: 20px; }
   .review-summary > div { grid-template-columns: 1fr auto; gap: 6px 14px; }
   .review-summary dt { grid-column: 1; }
@@ -380,3 +360,37 @@ label small { display: block; color: var(--muted); margin-top: 6px; font-size: 1
 
 .form-error-summary ul { display: grid; gap: 3px; margin: 9px 0 0; padding-left: 18px; }
 .form-error-summary button { padding: 0; border: 0; background: transparent; color: #812f29; font-size: 11px; font-weight: 700; text-align: left; text-decoration: underline; cursor: pointer; }
+
+/* Registration header and protocol information dialog */
+.registration-progress { width: min(100%, 900px); margin: 0 0 24px; }
+.registration-heading { width: min(100%, 900px); margin-bottom: 30px; }
+.registration-title-line { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.registration-title-line h1 { min-width: 0; }
+.registration-info-button { display: grid; flex: 0 0 auto; place-items: center; width: 42px; height: 42px; padding: 0; border: 1px solid #a8b9b0; border-radius: 50%; background: rgba(255, 255, 255, 0.7); color: var(--green); font: 700 20px/1 Georgia, serif; cursor: pointer; transition: background 150ms, border-color 150ms, box-shadow 150ms, transform 150ms; }
+.registration-info-button:hover { transform: translateY(-1px); border-color: var(--green); background: white; box-shadow: 0 6px 16px rgba(23, 79, 60, 0.12); }
+.registration-info-button:focus-visible { outline: 3px solid rgba(23, 79, 60, 0.2); outline-offset: 3px; }
+.new-order-layout { display: block; width: min(100%, 900px); }
+
+.protocol-info-backdrop { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(8, 25, 20, 0.54); backdrop-filter: blur(5px); animation: modal-fade-in 160ms ease-out; }
+.protocol-info-dialog { position: relative; width: min(100%, 390px); padding: 30px; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px; background: var(--green); color: white; box-shadow: 0 24px 70px rgba(8, 25, 20, 0.34); outline: none; animation: modal-rise-in 180ms ease-out; }
+.protocol-info-dialog:focus { box-shadow: 0 24px 70px rgba(8, 25, 20, 0.34), 0 0 0 3px rgba(220, 235, 227, 0.28); }
+.protocol-info-close { position: absolute; top: 14px; right: 14px; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%; background: transparent; color: white; font-size: 22px; line-height: 1; cursor: pointer; }
+.protocol-info-close:hover { background: rgba(255, 255, 255, 0.11); }
+.protocol-info-close:focus-visible { outline: 3px solid rgba(223, 188, 121, 0.45); outline-offset: 2px; }
+.protocol-info-dialog h2 { margin: 18px 0 8px; font: 500 25px/1.2 Georgia, serif; }
+.protocol-info-dialog > p { margin: 0; color: rgba(255, 255, 255, 0.74); font-size: 13px; line-height: 1.65; }
+.protocol-info-dialog ul { display: grid; gap: 13px; margin: 25px 0 0; padding: 21px 0 0; border-top: 1px solid rgba(255, 255, 255, 0.17); list-style: none; }
+.protocol-info-dialog li { display: grid; grid-template-columns: 18px 1fr; gap: 9px; color: rgba(255, 255, 255, 0.88); font-size: 12px; }
+.protocol-info-dialog li span { color: #dfbc79; font-weight: 850; }
+
+@keyframes modal-fade-in { from { opacity: 0; } }
+@keyframes modal-rise-in { from { opacity: 0; transform: translateY(8px) scale(0.985); } }
+
+@media (max-width: 620px) {
+  .registration-progress { margin-bottom: 20px; }
+  .registration-heading { margin-bottom: 22px; }
+  .registration-title-line { gap: 14px; }
+  .registration-info-button { width: 38px; height: 38px; }
+  .protocol-info-backdrop { align-items: end; padding: 12px; }
+  .protocol-info-dialog { width: 100%; padding: 26px 22px; border-radius: 14px; }
+}

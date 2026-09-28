@@ -32,6 +32,8 @@ const priorityHelp: Record<OrderPriority, string> = {
 export default function NewOrderPage() {
   const router = useRouter();
   const errorSummaryRef = useRef<HTMLDivElement>(null);
+  const infoButtonRef = useRef<HTMLButtonElement>(null);
+  const infoDialogRef = useRef<HTMLDivElement>(null);
   const [types, setTypes] = useState<RequestType[]>([]);
   const [draft, setDraft] = useState<OrderDraft>(initialDraft);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -39,6 +41,7 @@ export default function NewOrderPage() {
   const [loadingTypes, setLoadingTypes] = useState(true);
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<'form' | 'review'>('form');
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     api<RequestType[]>('/request-types')
@@ -56,6 +59,23 @@ export default function NewOrderPage() {
     document.title = `${Object.keys(errors).length > 0 ? 'Erro: ' : ''}${pageName} | Ofício Digital`;
     return () => { document.title = 'Ofício Digital | Protocolos'; };
   }, [errors, step]);
+
+  useEffect(() => {
+    if (!showInfo) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    infoDialogRef.current?.focus();
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') closeInfo();
+    }
+
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [showInfo]);
 
   const selectedType = useMemo(
     () => types.find((type) => type.id === draft.requestTypeId),
@@ -101,6 +121,11 @@ export default function NewOrderPage() {
     window.setTimeout(() => document.getElementById(fieldId ?? 'requestTypeId')?.focus(), 0);
   }
 
+  function closeInfo() {
+    setShowInfo(false);
+    window.setTimeout(() => infoButtonRef.current?.focus(), 0);
+  }
+
   async function createOrder() {
     setSaving(true);
     setApiError('');
@@ -120,28 +145,37 @@ export default function NewOrderPage() {
     <div className="shell registration-page page-stack">
       <Link href="/" className="back-link">← Voltar para pedidos</Link>
 
-      <div className="registration-heading-row">
-        <section className="page-heading registration-heading">
-          <p className="eyebrow">Novo atendimento</p>
-          <h1>{step === 'form' ? 'Registrar protocolo' : 'Conferir protocolo'}</h1>
-          <p>
-            {step === 'form'
-              ? 'Reúna as informações essenciais para iniciar o atendimento.'
-              : 'Revise os dados antes de gerar o número do protocolo.'}
-          </p>
-        </section>
+      <ol className="registration-progress" aria-label="Etapas do cadastro">
+        <li className={step === 'form' ? 'active' : 'complete'}>
+          <span>{step === 'review' ? '✓' : '1'}</span>
+          <div><small>Etapa 1</small><strong>Dados do pedido</strong></div>
+        </li>
+        <li className={step === 'review' ? 'active' : ''}>
+          <span>2</span>
+          <div><small>Etapa 2</small><strong>Conferência</strong></div>
+        </li>
+      </ol>
 
-        <ol className="registration-progress" aria-label="Etapas do cadastro">
-          <li className={step === 'form' ? 'active' : 'complete'}>
-            <span>{step === 'review' ? '✓' : '1'}</span>
-            <div><small>Etapa 1</small><strong>Dados do pedido</strong></div>
-          </li>
-          <li className={step === 'review' ? 'active' : ''}>
-            <span>2</span>
-            <div><small>Etapa 2</small><strong>Conferência</strong></div>
-          </li>
-        </ol>
-      </div>
+      <section className="page-heading registration-heading">
+        <p className="eyebrow">Novo atendimento</p>
+        <div className="registration-title-line">
+          <h1>{step === 'form' ? 'Registrar protocolo' : 'Conferir protocolo'}</h1>
+          <button
+            ref={infoButtonRef}
+            className="registration-info-button"
+            type="button"
+            aria-label="Informações sobre o protocolo"
+            aria-haspopup="dialog"
+            aria-expanded={showInfo}
+            onClick={() => setShowInfo(true)}
+          >?</button>
+        </div>
+        <p>
+          {step === 'form'
+            ? 'Reúna as informações essenciais para iniciar o atendimento.'
+            : 'Revise os dados antes de gerar o número do protocolo.'}
+        </p>
+      </section>
 
       {step === 'form' ? (
         <form className="registration-form" onSubmit={review} noValidate>
@@ -284,16 +318,6 @@ export default function NewOrderPage() {
               </div>
             </div>
 
-            <aside className="registration-guide">
-              <div className="guide-symbol" aria-hidden>#</div>
-              <h2>Protocolo automático</h2>
-              <p>O número sequencial será gerado somente depois da sua confirmação.</p>
-              <ul>
-                <li><span aria-hidden>✓</span> Todos os campos são obrigatórios</li>
-                <li><span aria-hidden>✓</span> Você poderá conferir antes de enviar</li>
-                <li><span aria-hidden>✓</span> O pedido começará como Protocolado</li>
-              </ul>
-            </aside>
           </div>
         </form>
       ) : (
@@ -344,11 +368,32 @@ export default function NewOrderPage() {
             </div>
           </section>
 
-          <aside className="registration-guide review-guide">
-            <p className="eyebrow">Próximo passo</p>
-            <h2>Acompanhamento completo</h2>
-            <p>Após a criação, você verá o protocolo, o status inicial e o histórico do pedido.</p>
-          </aside>
+        </div>
+      )}
+
+      {showInfo && (
+        <div
+          className="protocol-info-backdrop"
+          onMouseDown={(event) => { if (event.target === event.currentTarget) closeInfo(); }}
+        >
+          <div
+            className="protocol-info-dialog"
+            ref={infoDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="protocol-info-title"
+            tabIndex={-1}
+          >
+            <button className="protocol-info-close" type="button" onClick={closeInfo} aria-label="Fechar informações">×</button>
+            <div className="guide-symbol" aria-hidden>#</div>
+            <h2 id="protocol-info-title">Protocolo automático</h2>
+            <p>O número sequencial será gerado somente depois da sua confirmação.</p>
+            <ul>
+              <li><span aria-hidden>✓</span> Todos os campos são obrigatórios</li>
+              <li><span aria-hidden>✓</span> Você poderá conferir antes de enviar</li>
+              <li><span aria-hidden>✓</span> O pedido começará como Protocolado</li>
+            </ul>
+          </div>
         </div>
       )}
     </div>
