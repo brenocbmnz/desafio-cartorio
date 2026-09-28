@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useCallback, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { StatusBadge } from '@/components/status-badge';
@@ -26,6 +26,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [order, setOrder] = useState<ServiceOrder | null>(null);
   const [error, setError] = useState('');
   const [working, setWorking] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus | ''>('');
+  const [pendingStatus, setPendingStatus] = useState<OrderStatus | null>(null);
+  const [transitionError, setTransitionError] = useState('');
+  const confirmationRef = useRef<HTMLDivElement>(null);
 
   const loadOrder = useCallback(async () => {
     setError('');
@@ -38,19 +42,54 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => { void loadOrder(); }, [loadOrder]);
 
+  useEffect(() => {
+    if (!pendingStatus) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    confirmationRef.current?.focus();
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !working) {
+        setPendingStatus(null);
+        setTransitionError('');
+      }
+    }
+
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [pendingStatus, working]);
+
   async function moveTo(status: OrderStatus) {
     setWorking(true);
-    setError('');
+    setTransitionError('');
     try {
       setOrder(await api<ServiceOrder>(`/orders/${id}/transitions`, {
         method: 'POST',
         body: JSON.stringify({ status }),
       }));
+      setSelectedStatus('');
+      setPendingStatus(null);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Erro ao movimentar pedido.');
+      setTransitionError(cause instanceof Error ? cause.message : 'Erro ao movimentar pedido.');
     } finally {
       setWorking(false);
     }
+  }
+
+  function reviewTransition() {
+    if (!selectedStatus) return;
+    setTransitionError('');
+    setPendingStatus(selectedStatus);
+  }
+
+  function closeConfirmation() {
+    if (working) return;
+    setPendingStatus(null);
+    setTransitionError('');
   }
 
   async function remove() {
@@ -130,17 +169,28 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           <p className="eyebrow">Próxima etapa</p>
           <h2>Movimentar pedido</h2>
           {transitions[order.status].length ? (
-            <div className="transition-list">
-              {transitions[order.status].map((status) => (
-                <button
-                  className={status === 'CANCELED' ? 'transition-danger' : ''}
-                  disabled={working}
-                  key={status}
-                  onClick={() => void moveTo(status)}
-                >
-                  <span>Alterar para</span><strong>{statusLabels[status]}</strong><b aria-hidden>→</b>
-                </button>
-              ))}
+            <div className="transition-control">
+              <label htmlFor="next-status">Alterar status para</label>
+              <select
+                id="next-status"
+                value={selectedStatus}
+                onChange={(event) => setSelectedStatus(event.target.value as OrderStatus | '')}
+                disabled={working}
+              >
+                <option value="">Selecione uma opção</option>
+                {transitions[order.status].map((status) => (
+                  <option key={status} value={status}>{statusLabels[status]}</option>
+                ))}
+              </select>
+              <p>A movimentação ficará registrada no histórico do pedido.</p>
+              <button
+                className={`button transition-review-button ${selectedStatus === 'CANCELED' ? 'button-danger' : 'button-primary'}`}
+                type="button"
+                disabled={!selectedStatus || working}
+                onClick={reviewTransition}
+              >
+                Continuar
+              </button>
             </div>
           ) : (
             <p className="terminal-message">Este pedido está em um estado final e não possui novas transições.</p>
@@ -150,6 +200,54 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           )}
         </aside>
       </div>
+
+      {pendingStatus && (
+        <div
+          className="transition-confirmation-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeConfirmation();
+          }}
+        >
+          <div
+            className="transition-confirmation-dialog"
+            ref={confirmationRef}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="transition-confirmation-title"
+            aria-describedby="transition-confirmation-description"
+            tabIndex={-1}
+          >
+            <div className={`transition-confirmation-icon ${pendingStatus === 'CANCELED' ? 'danger' : ''}`} aria-hidden>
+              {pendingStatus === 'CANCELED' ? '!' : '→'}
+            </div>
+            <p className="eyebrow">Confirmar alteração</p>
+            <h2 id="transition-confirmation-title">Movimentar pedido?</h2>
+            <p id="transition-confirmation-description">
+              O protocolo <strong>{order.protocol}</strong> terá seu status alterado. Esta ação ficará registrada na auditoria.
+            </p>
+            <div className="transition-preview">
+              <div><span>Status atual</span><StatusBadge status={order.status} /></div>
+              <b aria-hidden>→</b>
+              <div><span>Novo status</span><StatusBadge status={pendingStatus} /></div>
+            </div>
+            {pendingStatus === 'CANCELED' && (
+              <p className="transition-warning">Pedidos cancelados não podem receber novas movimentações.</p>
+            )}
+            {transitionError && <div className="alert alert-error" role="alert">{transitionError}</div>}
+            <div className="transition-confirmation-actions">
+              <button className="button button-ghost" type="button" disabled={working} onClick={closeConfirmation}>Voltar</button>
+              <button
+                className={`button ${pendingStatus === 'CANCELED' ? 'button-danger' : 'button-primary'}`}
+                type="button"
+                disabled={working}
+                onClick={() => void moveTo(pendingStatus)}
+              >
+                {working ? 'Movimentando…' : 'Confirmar movimentação'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
