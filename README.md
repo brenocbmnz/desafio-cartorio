@@ -144,8 +144,9 @@ Parâmetros da listagem: `status`, `requestTypeId`, `search`, `page` e `pageSize
 - **Prisma com SQL pontual:** Prisma atende bem ao CRUD tipado. Usei SQL explícito apenas onde a semântica de lock/retorno do PostgreSQL é parte central da solução.
 - **Sem Redis:** a listagem muda a cada criação e transição, e o volume do exercício não justifica invalidação distribuída. Índices no banco são suficientes neste estágio.
 - **Sem autenticação:** não foi solicitada. Em produção, toda transição deveria registrar também o ator autenticado.
-- **Sem Kanban e IA:** são diferenciais opcionais; priorizei consistência, testes e experiência dos três fluxos obrigatórios.
+- **Sem Kanban e IA:** são diferenciais opcionais; priorizei consistência, testes e experiência dos três fluxos obrigatórios, apesar de implementar, além da lista de pedidos, uma visão em cartões que lembra o Kanban. A IA eu implementaria como um chatbot, podendo ser chamado tanto no canto superior direito da página (abrindo uma pequena janela no canto inferior direito) e também podendo ser chamado em alguns pontos críticos, como por exemplo abaixo do select de "Serviço Solicitado".
 - **Histórico somente de transições:** a criação aparece como evento inicial calculado a partir de `createdAt`; a tabela de histórico guarda apenas mudanças reais, sempre com origem e destino.
+- **Fluxo de pedidos levemente alterados:** Por achar melhor trazer um fluxo mais robusto e menos linear, passando o "Concluído" apenas quando ele está "Em Análise" e tratando o "Em Exigência" como um recurso, que então voltaria para "Em Análise" e posteriormente seria "Concluído".
 
 ## Interpretações de ambiguidades
 
