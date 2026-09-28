@@ -362,8 +362,8 @@ label small { display: block; color: var(--muted); margin-top: 6px; font-size: 1
 .form-error-summary button { padding: 0; border: 0; background: transparent; color: #812f29; font-size: 11px; font-weight: 700; text-align: left; text-decoration: underline; cursor: pointer; }
 
 /* Registration header and protocol information dialog */
-.registration-progress { width: min(100%, 900px); margin: 0 0 24px; }
-.registration-heading { width: min(100%, 900px); margin-bottom: 30px; }
+.registration-progress { width: min(100%, 900px); margin: 0 0 14px; }
+.registration-heading { width: min(100%, 900px); margin-bottom: 24px; }
 .registration-title-line { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .registration-title-line h1 { min-width: 0; }
 .registration-info-button { display: grid; flex: 0 0 auto; place-items: center; width: 42px; height: 42px; padding: 0; border: 1px solid #a8b9b0; border-radius: 50%; background: rgba(255, 255, 255, 0.7); color: var(--green); font: 700 20px/1 Georgia, serif; cursor: pointer; transition: background 150ms, border-color 150ms, box-shadow 150ms, transform 150ms; }
@@ -371,26 +371,27 @@ label small { display: block; color: var(--muted); margin-top: 6px; font-size: 1
 .registration-info-button:focus-visible { outline: 3px solid rgba(23, 79, 60, 0.2); outline-offset: 3px; }
 .new-order-layout { display: block; width: min(100%, 900px); }
 
-.protocol-info-backdrop { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(8, 25, 20, 0.54); backdrop-filter: blur(5px); animation: modal-fade-in 160ms ease-out; }
-.protocol-info-dialog { position: relative; width: min(100%, 390px); padding: 30px; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px; background: var(--green); color: white; box-shadow: 0 24px 70px rgba(8, 25, 20, 0.34); outline: none; animation: modal-rise-in 180ms ease-out; }
-.protocol-info-dialog:focus { box-shadow: 0 24px 70px rgba(8, 25, 20, 0.34), 0 0 0 3px rgba(220, 235, 227, 0.28); }
-.protocol-info-close { position: absolute; top: 14px; right: 14px; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%; background: transparent; color: white; font-size: 22px; line-height: 1; cursor: pointer; }
+.protocol-info-dialog { position: fixed; z-index: 50; width: min(370px, calc(100vw - 24px)); max-height: calc(100vh - 16px); overflow: auto; border: 1px solid #719383; border-radius: 11px; background: var(--green); color: white; box-shadow: 0 22px 60px rgba(8, 25, 20, 0.3), 0 3px 12px rgba(8, 25, 20, 0.2); outline: none; animation: floating-window-in 150ms ease-out; }
+.protocol-info-dialog:focus { box-shadow: 0 22px 60px rgba(8, 25, 20, 0.3), 0 0 0 3px rgba(23, 79, 60, 0.2); }
+.protocol-info-drag-handle { position: sticky; z-index: 1; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 46px; padding: 7px 8px 7px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.15); background: #123f31; cursor: grab; touch-action: none; user-select: none; }
+.protocol-info-drag-handle:active { cursor: grabbing; }
+.protocol-info-drag-handle > span { color: rgba(255, 255, 255, 0.76); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.protocol-info-close { display: grid; flex: 0 0 auto; place-items: center; width: 31px; height: 31px; padding: 0; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 7px; background: transparent; color: white; font-size: 20px; line-height: 1; cursor: pointer; }
 .protocol-info-close:hover { background: rgba(255, 255, 255, 0.11); }
-.protocol-info-close:focus-visible { outline: 3px solid rgba(223, 188, 121, 0.45); outline-offset: 2px; }
-.protocol-info-dialog h2 { margin: 18px 0 8px; font: 500 25px/1.2 Georgia, serif; }
-.protocol-info-dialog > p { margin: 0; color: rgba(255, 255, 255, 0.74); font-size: 13px; line-height: 1.65; }
-.protocol-info-dialog ul { display: grid; gap: 13px; margin: 25px 0 0; padding: 21px 0 0; border-top: 1px solid rgba(255, 255, 255, 0.17); list-style: none; }
-.protocol-info-dialog li { display: grid; grid-template-columns: 18px 1fr; gap: 9px; color: rgba(255, 255, 255, 0.88); font-size: 12px; }
-.protocol-info-dialog li span { color: #dfbc79; font-weight: 850; }
+.protocol-info-close:focus-visible { outline: 3px solid rgba(223, 188, 121, 0.45); outline-offset: 1px; }
+.protocol-info-content { padding: 23px 25px 26px; }
+.protocol-info-content h2 { margin: 17px 0 8px; font: 500 24px/1.2 Georgia, serif; }
+.protocol-info-content > p { margin: 0; color: rgba(255, 255, 255, 0.74); font-size: 12px; line-height: 1.65; }
+.protocol-info-content ul { display: grid; gap: 12px; margin: 23px 0 0; padding: 19px 0 0; border-top: 1px solid rgba(255, 255, 255, 0.17); list-style: none; }
+.protocol-info-content li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; color: rgba(255, 255, 255, 0.88); font-size: 11px; }
+.protocol-info-content li span { color: #dfbc79; font-weight: 850; }
 
-@keyframes modal-fade-in { from { opacity: 0; } }
-@keyframes modal-rise-in { from { opacity: 0; transform: translateY(8px) scale(0.985); } }
+@keyframes floating-window-in { from { opacity: 0; transform: translateY(5px) scale(0.99); } }
 
 @media (max-width: 620px) {
-  .registration-progress { margin-bottom: 20px; }
-  .registration-heading { margin-bottom: 22px; }
+  .registration-progress { margin-bottom: 12px; }
+  .registration-heading { margin-bottom: 20px; }
   .registration-title-line { gap: 14px; }
   .registration-info-button { width: 38px; height: 38px; }
-  .protocol-info-backdrop { align-items: end; padding: 12px; }
-  .protocol-info-dialog { width: 100%; padding: 26px 22px; border-radius: 14px; }
+  .protocol-info-dialog { width: calc(100vw - 24px); }
 }

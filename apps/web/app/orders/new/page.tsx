@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -14,6 +14,7 @@ type OrderDraft = {
 };
 
 type FieldErrors = Partial<Record<keyof OrderDraft, string>>;
+type Position = { x: number; y: number };
 
 const initialDraft: OrderDraft = {
   requestTypeId: '',
@@ -42,6 +43,8 @@ export default function NewOrderPage() {
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<'form' | 'review'>('form');
   const [showInfo, setShowInfo] = useState(false);
+  const [infoPosition, setInfoPosition] = useState<Position>({ x: 24, y: 100 });
+  const dragStateRef = useRef<{ pointerId: number; offsetX: number; offsetY: number } | null>(null);
 
   useEffect(() => {
     api<RequestType[]>('/request-types')
@@ -62,9 +65,16 @@ export default function NewOrderPage() {
 
   useEffect(() => {
     if (!showInfo) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    infoDialogRef.current?.focus();
+    window.requestAnimationFrame(() => {
+      const dialog = infoDialogRef.current;
+      if (!dialog) return;
+      const bounds = dialog.getBoundingClientRect();
+      setInfoPosition((current) => ({
+        x: Math.max(8, Math.min(current.x, window.innerWidth - bounds.width - 8)),
+        y: Math.max(8, Math.min(current.y, window.innerHeight - bounds.height - 8)),
+      }));
+      dialog.focus();
+    });
 
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') closeInfo();
@@ -72,7 +82,6 @@ export default function NewOrderPage() {
 
     document.addEventListener('keydown', closeOnEscape);
     return () => {
-      document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [showInfo]);
@@ -126,6 +135,47 @@ export default function NewOrderPage() {
     window.setTimeout(() => infoButtonRef.current?.focus(), 0);
   }
 
+  function openInfo() {
+    const buttonBounds = infoButtonRef.current?.getBoundingClientRect();
+    const width = Math.min(370, window.innerWidth - 24);
+    setInfoPosition({
+      x: Math.max(12, Math.min(window.innerWidth - width - 12, (buttonBounds?.right ?? window.innerWidth - 12) - width)),
+      y: Math.max(12, Math.min(window.innerHeight - 330, (buttonBounds?.bottom ?? 80) + 12)),
+    });
+    setShowInfo(true);
+  }
+
+  function startInfoDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    const bounds = infoDialogRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+    dragStateRef.current = {
+      pointerId: event.pointerId,
+      offsetX: event.clientX - bounds.left,
+      offsetY: event.clientY - bounds.top,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function moveInfoDialog(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = dragStateRef.current;
+    const dialog = infoDialogRef.current;
+    if (!drag || drag.pointerId !== event.pointerId || !dialog) return;
+    const bounds = dialog.getBoundingClientRect();
+    setInfoPosition({
+      x: Math.max(8, Math.min(event.clientX - drag.offsetX, window.innerWidth - bounds.width - 8)),
+      y: Math.max(8, Math.min(event.clientY - drag.offsetY, window.innerHeight - bounds.height - 8)),
+    });
+  }
+
+  function stopInfoDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    if (dragStateRef.current?.pointerId !== event.pointerId) return;
+    dragStateRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
   async function createOrder() {
     setSaving(true);
     setApiError('');
@@ -145,17 +195,6 @@ export default function NewOrderPage() {
     <div className="shell registration-page page-stack">
       <Link href="/" className="back-link">← Voltar para pedidos</Link>
 
-      <ol className="registration-progress" aria-label="Etapas do cadastro">
-        <li className={step === 'form' ? 'active' : 'complete'}>
-          <span>{step === 'review' ? '✓' : '1'}</span>
-          <div><small>Etapa 1</small><strong>Dados do pedido</strong></div>
-        </li>
-        <li className={step === 'review' ? 'active' : ''}>
-          <span>2</span>
-          <div><small>Etapa 2</small><strong>Conferência</strong></div>
-        </li>
-      </ol>
-
       <section className="page-heading registration-heading">
         <p className="eyebrow">Novo atendimento</p>
         <div className="registration-title-line">
@@ -167,7 +206,7 @@ export default function NewOrderPage() {
             aria-label="Informações sobre o protocolo"
             aria-haspopup="dialog"
             aria-expanded={showInfo}
-            onClick={() => setShowInfo(true)}
+            onClick={openInfo}
           >?</button>
         </div>
         <p>
@@ -176,6 +215,17 @@ export default function NewOrderPage() {
             : 'Revise os dados antes de gerar o número do protocolo.'}
         </p>
       </section>
+
+      <ol className="registration-progress" aria-label="Etapas do cadastro">
+        <li className={step === 'form' ? 'active' : 'complete'}>
+          <span>{step === 'review' ? '✓' : '1'}</span>
+          <div><small>Etapa 1</small><strong>Dados do pedido</strong></div>
+        </li>
+        <li className={step === 'review' ? 'active' : ''}>
+          <span>2</span>
+          <div><small>Etapa 2</small><strong>Conferência</strong></div>
+        </li>
+      </ol>
 
       {step === 'form' ? (
         <form className="registration-form" onSubmit={review} noValidate>
@@ -373,18 +423,30 @@ export default function NewOrderPage() {
 
       {showInfo && (
         <div
-          className="protocol-info-backdrop"
-          onMouseDown={(event) => { if (event.target === event.currentTarget) closeInfo(); }}
+          className="protocol-info-dialog"
+          ref={infoDialogRef}
+          role="dialog"
+          aria-labelledby="protocol-info-title"
+          tabIndex={-1}
+          style={{ left: infoPosition.x, top: infoPosition.y }}
         >
           <div
-            className="protocol-info-dialog"
-            ref={infoDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="protocol-info-title"
-            tabIndex={-1}
+            className="protocol-info-drag-handle"
+            onPointerDown={startInfoDrag}
+            onPointerMove={moveInfoDialog}
+            onPointerUp={stopInfoDrag}
+            onPointerCancel={stopInfoDrag}
           >
-            <button className="protocol-info-close" type="button" onClick={closeInfo} aria-label="Fechar informações">×</button>
+            <span>Informações do protocolo</span>
+            <button
+              className="protocol-info-close"
+              type="button"
+              onClick={closeInfo}
+              onPointerDown={(event) => event.stopPropagation()}
+              aria-label="Fechar informações"
+            >×</button>
+          </div>
+          <div className="protocol-info-content">
             <div className="guide-symbol" aria-hidden>#</div>
             <h2 id="protocol-info-title">Protocolo automático</h2>
             <p>O número sequencial será gerado somente depois da sua confirmação.</p>
